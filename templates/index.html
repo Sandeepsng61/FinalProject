@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}PC Assembler - Build Your Dream PC{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero bg-light text-dark rounded p-4 mb-5 shadow-lg border border-2 border-gray" style="background: linear-gradient(135deg, #ffffff, #add8e6);">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <h1 class="display-4 fw-bold">Build Your Dream PC</h1>
+            <p class="lead">Choose from our wide range of components or use our PC Builder tool to create a custom system tailored to your needs.</p>
+            <div class="mt-4">
+                <a href="{{ url_for('pc_builder') }}" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-tools me-2"></i>PC Builder
+                </a>
+                <a href="{{ url_for('components') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-microchip me-2"></i>Browse Components
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6 text-center">
+            <img src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/140305822/original/8ab233d7e62a8305a4c6ceb427bd186b1582ad96/gaming-pc-builder-specialist.png" alt="Gaming PC" class="img-fluid rounded shadow">
+        </div>
+    </div>
+</div>
+
+<!-- Featured Products -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Featured Products</h2>
+        <a href="{{ url_for('components') }}" class="btn btn-outline-primary">View All</a>
+    </div>
+    <div class="row">
+        {% for product in featured_products %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: contain; padding: 10px; background-color: #f8f9fa;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-truncate">{{ product.description }}</p>
+                        <p class="fs-5 fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-primary">View Details</a>
+                        <form action="{{ url_for('add_to_cart') }}" method="post">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">No featured products available at the moment.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Categories Section -->
+<div class="mb-5">
+    <h2 class="mb-4">Popular Categories</h2>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-microchip fa-4x mb-3 text-primary"></i>
+                    <h5 class="card-title">CPUs</h5>
+                    <p class="card-text">Latest processors from Intel and AMD</p>
+                    <a href="{{ url_for('components', category='cpu') }}" class="btn btn-outline-primary">Browse CPUs</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-desktop fa-4x mb-3 text-primary"></i>
+                    <h5 class="card-title">Graphics Cards</h5>
+                    <p class="card-text">High-performance GPUs for gaming and content creation</p>
+                    <a href="{{ url_for('components', category='gpu') }}" class="btn btn-outline-primary">Browse GPUs</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-memory fa-4x mb-3 text-primary"></i>
+                    <h5 class="card-title">Memory</h5>
+                    <p class="card-text">High-speed RAM for smooth performance</p>
+                    <a href="{{ url_for('components', category='ram') }}" class="btn btn-outline-primary">Browse Memory</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-hdd fa-4x mb-3 text-primary"></i>
+                    <h5 class="card-title">Storage</h5>
+                    <p class="card-text">SSDs and HDDs for all your storage needs</p>
+                    <a href="{{ url_for('components', category='storage') }}" class="btn btn-outline-primary">Browse Storage</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pre-built PCs Section -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Pre-built Gaming PCs</h2>
+        <div>
+            <a href="{{ url_for('intel_pcs') }}" class="btn btn-outline-primary me-2">Intel PCs</a>
+            <a href="{{ url_for('amd_pcs') }}" class="btn btn-outline-primary">AMD PCs</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" alt="Intel Gaming PC" class="img-fluid rounded-start h-100" style="object-fit: cover;">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">Intel Gaming Powerhouse</h5>
+                            <p class="card-text">Experience top-tier gaming performance with our Intel-powered gaming PCs, featuring the latest Core i7 and i9 processors.</p>
+                            <a href="{{ url_for('intel_pcs') }}" class="btn btn-primary">Explore Intel PCs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1624705013726-8cb4f9415f40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="AMD Gaming PC" class="img-fluid rounded-start h-100" style="object-fit: cover;">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">AMD Gaming Beasts</h5>
+                            <p class="card-text">Unleash your gaming potential with our AMD-powered systems featuring Ryzen processors for exceptional multi-tasking and gaming.</p>
+                            <a href="{{ url_for('amd_pcs') }}" class="btn btn-primary">Explore AMD PCs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Why Choose Us Section -->
+<div class="mb-5">
+    <h2 class="mb-4 text-center">Why Choose PC Assembler?</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-medal fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Quality Components</h5>
+                    <p class="card-text">We source only the highest quality components from trusted manufacturers to ensure reliability and performance.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-headset fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Expert Support</h5>
+                    <p class="card-text">Our team of PC building experts is available to help you with any questions or issues you might have.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-shield-alt fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Warranty Protection</h5>
+                    <p class="card-text">All our products come with manufacturer warranties, and we offer extended protection plans for added peace of mind.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PC Builder Promotion -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <h2>Custom PC Builder</h2>
+                <p class="lead">Design your dream PC with our easy-to-use PC builder tool.</p>
+                <p>Select compatible components, visualize your build, and get it delivered to your doorstep.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Choose from hundreds of components</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Automatic compatibility checking</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Real-time price updates</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Expert assembly and testing</li>
+                </ul>
+                <a href="{{ url_for('pc_builder') }}" class="btn btn-primary mt-3">Start Building</a>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <div class="ratio ratio-16x9">
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/lsnDX-uBvcI?si=Xa95-mpCy6FjonRY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="bg-white py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">What Our Customers Say</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <h5 class="mb-0">Suraj</h5>
+                                <p class="text-muted mb-0">Gaming Enthusiast</p>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="card-text">"The custom PC builder made it so easy to create my dream gaming rig. The compatibility checker saved me from making costly mistakes. Highly recommended!"</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <h5 class="mb-0">Mehak</h5>
+                                <p class="text-muted mb-0">Content Creator</p>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="card-text">"As a video editor, I needed a powerful workstation. The PC Builder team helped me configure a system that handles 4K editing with ease. Great service!"</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <h5 class="mb-0">Saurabh</h5>
+                                <p class="text-muted mb-0">Student</p>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="card-text">"Found a budget-friendly pre-built gaming PC that exceeded my expectations. Fast shipping and great customer support when I had questions about upgrades."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Signup -->
+<div style="background-color: #add8e6;" class="text-dark p-3 rounded">  
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h3>Subscribe to Our Newsletter</h3>
+                <p>Stay updated with the latest PC components, builds, and exclusive offers.</p>
+            </div>
+            <div class="col-md-5">
+                <form class="d-flex">
+                    <input type="email" class="form-control me-2" placeholder="Your email address">
+                    <button type="submit" class="btn btn-light">Subscribe</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

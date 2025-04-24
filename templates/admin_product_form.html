@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Add Product{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">Admin - Product Management</h1>
+            <p class="lead">Add or edit products easily through this form</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Product Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_add_product') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="product_id" value="{{ product.id if product else '' }}">
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Product Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ product.name if product else '' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category *</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="cpu" {% if product and product.category == 'cpu' %}selected{% endif %}>CPU</option>
+                                <option value="motherboard" {% if product and product.category == 'motherboard' %}selected{% endif %}>Motherboard</option>
+                                <option value="gpu" {% if product and product.category == 'gpu' %}selected{% endif %}>GPU</option>
+                                <option value="ram" {% if product and product.category == 'ram' %}selected{% endif %}>RAM</option>
+                                <option value="storage" {% if product and product.category == 'storage' %}selected{% endif %}>Storage</option>
+                                <option value="psu" {% if product and product.category == 'psu' %}selected{% endif %}>Power Supply</option>
+                                <option value="case" {% if product and product.category == 'case' %}selected{% endif %}>Case</option>
+                                <option value="cooling" {% if product and product.category == 'cooling' %}selected{% endif %}>Cooling</option>
+                                <option value="monitor" {% if product and product.category == 'monitor' %}selected{% endif %}>Monitor</option>
+                                <option value="prebuilt" {% if product and product.category == 'prebuilt' %}selected{% endif %}>Prebuilt PC</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description *</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required>{{ product.description if product else '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price (₹) *</label>
+                            <input type="number" class="form-control" id="price" name="price" step="0.01" value="{{ product.price if product else '' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="stock" class="form-label">Stock *</label>
+                            <input type="number" class="form-control" id="stock" name="stock" value="{{ product.stock if product else '0' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image_url" class="form-label">Image URL</label>
+                            <input type="text" class="form-control" id="image_url" name="image_url" value="{{ product.image_url if product else '' }}">
+                            <div class="form-text">Enter a URL for the product image or leave empty to use a placeholder</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="specs" class="form-label">Specifications (JSON format)</label>
+                            <textarea class="form-control" id="specs" name="specs" rows="6">{{ product.specs|tojson if product and product.specs else '{\n  "key1": "value1",\n  "key2": "value2"\n}' }}</textarea>
+                            <div class="form-text">Enter product specifications in JSON format</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Save Product</button>
+                            <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-dark">
+                    <h5 class="mb-0">Help</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Category Types:</h6>
+                    <ul>
+                        <li><strong>cpu</strong>: Processors (Intel, AMD)</li>
+                        <li><strong>motherboard</strong>: Motherboards for PC building</li>
+                        <li><strong>gpu</strong>: Graphics cards</li>
+                        <li><strong>ram</strong>: Memory modules</li>
+                        <li><strong>storage</strong>: SSDs, HDDs, NVMe drives</li>
+                        <li><strong>psu</strong>: Power supply units</li>
+                        <li><strong>case</strong>: Computer cases/chassis</li>
+                        <li><strong>cooling</strong>: CPU coolers, case fans</li>
+                        <li><strong>monitor</strong>: Display monitors</li>
+                        <li><strong>prebuilt</strong>: Pre-assembled computers</li>
+                    </ul>
+                    
+                    <h6>Specs Format Example:</h6>
+                    <p>For CPU:</p>
+                    <pre>{
+  "processor_family": "i9",
+  "cores": "16 cores",
+  "threads": "24",
+  "socket": "LGA1700",
+  "tdp": "125W"
+}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Format JSON textarea on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const specsField = document.getElementById('specs');
+        try {
+            let specs = JSON.parse(specsField.value);
+            specsField.value = JSON.stringify(specs, null, 2);
+        } catch (e) {
+            // Keep as is if not valid JSON
+        }
+    });
+</script>
+{% endblock %}

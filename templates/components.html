@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Components - PC Assembler{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Computer Components</h1>
+
+    <!-- Category Navigation -->
+<div class="bg-light p-3 rounded mb-4 border">
+    <div class="d-flex flex-wrap justify-content-between">
+        <a href="{{ url_for('components', category='all') }}" class="btn btn-outline-dark mb-2 {% if category == 'all' %}active{% endif %}">
+            All Components
+        </a>
+        <a href="{{ url_for('components', category='cpu') }}" class="btn btn-outline-dark mb-2 {% if category == 'cpu' %}active{% endif %}">
+            <i class="fas fa-microchip me-1"></i> CPU
+        </a>
+        <a href="{{ url_for('components', category='motherboard') }}" class="btn btn-outline-dark mb-2 {% if category == 'motherboard' %}active{% endif %}">
+            <i class="fas fa-desktop me-1"></i> Motherboard
+        </a>
+        <a href="{{ url_for('components', category='ram') }}" class="btn btn-outline-dark mb-2 {% if category == 'ram' %}active{% endif %}">
+            <i class="fas fa-memory me-1"></i> RAM
+        </a>
+        <a href="{{ url_for('components', category='gpu') }}" class="btn btn-outline-dark mb-2 {% if category == 'gpu' %}active{% endif %}">
+            <i class="fas fa-tv me-1"></i> GPU
+        </a>
+        <a href="{{ url_for('components', category='storage') }}" class="btn btn-outline-dark mb-2 {% if category == 'storage' %}active{% endif %}">
+            <i class="fas fa-hdd me-1"></i> Storage
+        </a>
+        <a href="{{ url_for('components', category='psu') }}" class="btn btn-outline-dark mb-2 {% if category == 'psu' %}active{% endif %}">
+            <i class="fas fa-plug me-1"></i> Power Supply
+        </a>
+        <a href="{{ url_for('components', category='case') }}" class="btn btn-outline-dark mb-2 {% if category == 'case' %}active{% endif %}">
+            <i class="fas fa-server me-1"></i> Case
+        </a>
+        <a href="{{ url_for('components', category='cooling') }}" class="btn btn-outline-dark mb-2 {% if category == 'cooling' %}active{% endif %}">
+            <i class="fas fa-wind me-1"></i> Cooling
+        </a>
+    </div>
+</div>
+
+    <!-- Selected Category Title -->
+    <h2 class="mb-4">
+        {% if category == 'all' %}
+            All Components
+        {% elif category == 'cpu' %}
+            CPU (Processor)
+        {% elif category == 'motherboard' %}
+            Motherboard
+        {% elif category == 'ram' %}
+            RAM (Memory)
+        {% elif category == 'gpu' %}
+            GPU (Graphics Card)
+        {% elif category == 'storage' %}
+            Storage (Hard Drives and SSDs)
+        {% elif category == 'psu' %}
+            Power Supply Unit
+        {% elif category == 'case' %}
+            Computer Case
+        {% elif category == 'cooling' %}
+            Cooling System
+        {% endif %}
+    </h2>
+
+    <!-- Storage Subcategories -->
+    {% if category == 'storage' %}
+    <div class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h4><i class="fas fa-bolt text-primary"></i> NVMe SSD</h4>
+                        <p>Ultra-fast storage solution using modern PCIe interface</p>
+                        <a href="#nvme" class="btn btn-outline-primary">View NVMe SSDs</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h4><i class="fas fa-microchip text-primary"></i> SATA SSD</h4>
+                        <p>Fast and reliable storage using traditional SATA interface</p>
+                        <a href="#sata-ssd" class="btn btn-outline-primary">View SATA SSDs</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h4><i class="fas fa-hdd text-primary"></i> Hard Disk Drive</h4>
+                        <p>Traditional mechanical hard drives for large storage capacity</p>
+                        <a href="#hdd" class="btn btn-outline-primary">View HDDs</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Cooling Subcategories -->
+    {% if category == 'cooling' %}
+    <div class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h4><i class="fas fa-fan text-primary"></i> Air Cooler</h4>
+                        <p>Traditional air-based CPU cooling systems</p>
+                        <a href="#air-cooler" class="btn btn-outline-primary">View Air Coolers</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h4><i class="fas fa-tint text-primary"></i> AIO Liquid Cooler</h4>
+                        <p>All-in-one liquid cooling systems for better thermal performance</p>
+                        <a href="#aio-cooler" class="btn btn-outline-primary">View AIO Coolers</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Products Listing -->
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for product in products %}
+            <div class="col">
+                <div class="card h-100 product-card">
+                    <div class="position-relative">
+                        <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}" style="height: 200px; object-fit: contain;">
+
+                        {% if product.stock <= 0 %}
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-danger">Out of Stock</span>
+                            </div>
+                        {% elif product.stock < 5 %}
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-warning">Limited Stock</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-truncate">{{ product.description }}</p>
+                        <p class="fs-5 fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}</p>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-primary">View Details</a>
+
+                        {% if product.stock > 0 %}
+                            <form action="{{ url_for('add_to_cart') }}" method="post">
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-secondary" disabled>Out of Stock</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No products available in this category.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

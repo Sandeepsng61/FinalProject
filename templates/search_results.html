@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results - SS PC Assembler{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">Search Results</h1>
+            <p class="lead">Showing results for: <strong>{{ query }}</strong></p>
+        </div>
+    </div>
+    
+    <!-- Filter and Sort -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <input type="text" id="search-input" class="form-control" placeholder="Search products..." value="{{ query }}">
+                <button class="btn btn-outline-secondary" type="button" id="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" id="sort-options">
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="name">Name: A to Z</option>
+            </select>
+        </div>
+    </div>
+    
+    {% if products and products|length > 0 %}
+    <!-- Products Display -->
+    <div class="row g-4" id="products-container">
+        {% for product in products %}
+        <div class="col-md-6 col-lg-4 product-card" data-price="{{ product.price }}" data-category="{{ product.category }}">
+            <div class="card h-100">
+                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-secondary">{{ product.category|capitalize }}</span>
+                        {% if product.stock > 0 %}
+                            <span class="badge bg-success">In Stock ({{ product.stock }})</span>
+                        {% else %}
+                            <span class="badge bg-danger">Out of Stock</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-truncate">{{ product.description }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h5 mb-0">₹{{ "%.2f"|format(product.price) }}</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 d-flex gap-2">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-secondary flex-grow-1">
+                        <i class="fas fa-info-circle me-1"></i>Details
+                    </a>
+                    <form method="POST" action="{{ url_for('add_to_cart') }}" class="flex-grow-1">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-primary w-100" {{ product.stock <= 0 and 'disabled' or '' }}>
+                            <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No Results -->
+    <div class="card text-center py-5">
+        <div class="card-body">
+            <i class="fas fa-search fa-4x mb-3 text-muted"></i>
+            <h3>No Products Found</h3>
+            <p class="mb-4">We couldn't find any products matching your search criteria.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Go to Homepage</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const sortSelect = document.getElementById('sort-options');
+        const productCards = document.querySelectorAll('.product-card');
+        const productsContainer = document.getElementById('products-container');
+        
+        // Search functionality
+        searchBtn.addEventListener('click', function() {
+            const query = searchInput.value.trim();
+            if (query) {
+                window.location.href = `{{ url_for('search') }}?q=${query}`;
+            }
+        });
+        
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.trim();
+                if (query) {
+                    window.location.href = `{{ url_for('search') }}?q=${query}`;
+                }
+            }
+        });
+        
+        // Sort functionality
+        sortSelect.addEventListener('change', function() {
+            const sortType = this.value;
+            const productCardsArray = Array.from(productCards);
+            
+            // Sort products
+            switch(sortType) {
+                case 'price-low':
+                    productCardsArray.sort((a, b) => parseFloat(a.dataset.price) - parseFloat(b.dataset.price));
+                    break;
+                case 'price-high':
+                    productCardsArray.sort((a, b) => parseFloat(b.dataset.price) - parseFloat(a.dataset.price));
+                    break;
+                case 'name':
+                    productCardsArray.sort((a, b) => {
+                        const nameA = a.querySelector('.card-title').textContent;
+                        const nameB = b.querySelector('.card-title').textContent;
+                        return nameA.localeCompare(nameB);
+                    });
+                    break;
+                default: // featured - original order
+                    productCardsArray.sort((a, b) => {
+                        return Array.from(productsContainer.children).indexOf(a) - Array.from(productsContainer.children).indexOf(b);
+                    });
+            }
+            
+            // Remove all products
+            productCards.forEach(card => card.remove());
+            
+            // Re-append in sorted order
+            productCardsArray.forEach(card => productsContainer.appendChild(card));
+        });
+    });
+</script>
+{% endblock %}

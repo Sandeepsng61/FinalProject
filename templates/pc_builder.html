@@ -1,0 +1,678 @@
+{% extends 'base.html' %}
+
+{% block title %}PC Builder - PC Assembler{% endblock %}
+
+{% block extra_css %}
+<style>
+    .component-item {
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid #dee2e6;
+    }
+
+    .component-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .component-item.selected {
+        border: 2px solid var(--bs-primary);
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .component-list {
+        max-height: 500px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .component-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .component-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .component-list::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    .component-detail {
+        height: 100%;
+    }
+
+    .selection-box {
+        background: rgba(248, 249, 250, 0.9);
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .compatibility-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid var(--bs-warning);
+    }
+
+    .compatibility-error {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-left: 4px solid var(--bs-danger);
+    }
+
+    .component-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Build your own PC</h1>
+            <p class="lead">Select components to build a custom PC according to your needs</p>
+        </div>
+        <div class="col-md-4 text-end d-flex justify-content-end align-items-start">
+            <button id="reset-build" class="btn btn-outline-danger me-2">
+                <i class="fas fa-redo"></i> Reset
+            </button>
+            <button id="add-all-to-cart" class="btn btn-primary">
+                <i class="fas fa-cart-plus"></i> Add all to cart
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column: Component Selection List -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Build overview</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for category in categories %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="#{{ category }}" class="category-link text-decoration-none">
+                                {% if category == 'cpu' %}
+                                <i class="fas fa-microchip text-primary me-2"></i> CPU (Processor)
+                                {% elif category == 'motherboard' %}
+                                <i class="fas fa-desktop text-primary me-2"></i> Motherboard
+                                {% elif category == 'ram' %}
+                                <i class="fas fa-memory text-primary me-2"></i> RAM (Memory)
+                                {% elif category == 'storage' %}
+                                <i class="fas fa-hdd text-primary me-2"></i> Storage
+                                {% elif category == 'gpu' %}
+                                <i class="fas fa-tv text-primary me-2"></i> GPU
+                                {% elif category == 'psu' %}
+                                <i class="fas fa-plug text-primary me-2"></i> Power Supply
+                                {% elif category == 'case' %}
+                                <i class="fas fa-server text-primary me-2"></i> Case
+                                {% elif category == 'cooling' %}
+                                <i class="fas fa-wind text-primary me-2"></i> Cooling
+                                {% endif %}
+                            </a>
+                            <span class="component-status" id="{{ category }}-status">
+                                <i class="fas fa-plus-circle text-muted"></i>
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Total Price:</span>
+                        <span class="fs-5 fw-bold text-primary" id="total-price">₹0.00</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 5px;">
+                        <div class="progress-bar" id="build-progress" role="progressbar" style="width: 0%;"
+                            aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="text-end mt-2">
+                        <small><span id="selected-count">0</span>/<span id="total-count">{{ categories|length }}</span>
+                            Components selected</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compatibility Check -->
+            <div class="card mt-4 shadow-sm" id="compatibility-card" style="display: none;">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Compatibility check</h5>
+                </div>
+                <div class="card-body" id="compatibility-issues">
+                    <!-- Compatibility issues will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Estimated Wattage -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Estimated wattage</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-center">
+                        <div class="progress w-75" style="height: 30px;">
+                            <div class="progress-bar bg-success" id="wattage-bar" role="progressbar" style="width: 0%;"
+                                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <span id="estimated-wattage">0</span>W / <span id="recommended-psu">500</span>W
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Component Selection -->
+        <div class="col-md-9">
+            {% for category in categories %}
+            <div class="card mb-4 shadow-sm" id="{{ category }}">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        {% if category == 'cpu' %}
+                        <i class="fas fa-microchip me-2"></i> Choose CPU (Processor)
+                        {% elif category == 'motherboard' %}
+                        <i class="fas fa-desktop me-2"></i> Choose Motherboard
+                        {% elif category == 'ram' %}
+                        <i class="fas fa-memory me-2"></i> Choose RAM (Memory)
+                        {% elif category == 'storage' %}
+                        <i class="fas fa-hdd me-2"></i> Choose storage
+                        {% elif category == 'gpu' %}
+                        <i class="fas fa-tv me-2"></i> Choose GPU (Graphics Card)
+                        {% elif category == 'psu' %}
+                        <i class="fas fa-plug me-2"></i> Choose power supply
+                        {% elif category == 'case' %}
+                        <i class="fas fa-server me-2"></i> Choose case
+                        {% elif category == 'cooling' %}
+                        <i class="fas fa-wind me-2"></i> Choose cooling system
+                        {% endif %}
+                    </h5>
+                    <div>
+                        <span class="selected-component-name text-white-50"></span>
+                    </div>
+                </div>
+
+                <!-- Storage subcategories -->
+                {% if category == 'storage' %}
+                <div class="card-body pb-0">
+                    <div class="nav nav-pills mb-3" id="storage-tabs" role="tablist">
+                        <button class="nav-link active" id="nvme-tab" data-bs-toggle="pill" data-bs-target="#nvme"
+                            type="button" role="tab">NVMe SSD</button>
+                        <button class="nav-link" id="sata-ssd-tab" data-bs-toggle="pill" data-bs-target="#sata-ssd"
+                            type="button" role="tab">SATA SSD</button>
+                        <button class="nav-link" id="hdd-tab" data-bs-toggle="pill" data-bs-target="#hdd" type="button"
+                            role="tab">HDD</button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Cooling subcategories -->
+                {% if category == 'cooling' %}
+                <div class="card-body pb-0">
+                    <div class="nav nav-pills mb-3" id="cooling-tabs" role="tablist">
+                        <button class="nav-link active" id="air-cooler-tab" data-bs-toggle="pill"
+                            data-bs-target="#air-cooler" type="button" role="tab">Air Cooler</button>
+                        <button class="nav-link" id="aio-cooler-tab" data-bs-toggle="pill" data-bs-target="#aio-cooler"
+                            type="button" role="tab">AIO Liquid Cooler</button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="card-body component-list tab-content">
+                    {% if category == 'storage' %}
+                    <!-- NVMe SSDs -->
+                    <div class="tab-pane fade show active" id="nvme" role="tabpanel">
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for product in components[category] if product.specs and product.specs.get('type') ==
+                            'nvme' %}
+                            <div class="col">
+                                <div class="card h-100 component-item" data-product-id="{{ product.id }}"
+                                    data-category="{{ category }}" data-price="{{ product.price }}">
+                                    <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}"
+                                        style="height: 150px; object-fit: contain; background-color: #f8f9fa;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ product.name }}</h6>
+                                        <p class="card-text small text-truncate">{{ product.description }}</p>
+                                        <p class="card-text fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info"> No NVMe SSD available</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- SATA SSDs -->
+                    <div class="tab-pane fade" id="sata-ssd" role="tabpanel">
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for product in components[category] if product.specs and product.specs.get('type') ==
+                            'sata_ssd' %}
+                            <div class="col">
+                                <div class="card h-100 component-item" data-product-id="{{ product.id }}"
+                                    data-category="{{ category }}" data-price="{{ product.price }}">
+                                    <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}"
+                                        style="height: 150px; object-fit: contain; background-color: #f8f9fa;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ product.name }}</h6>
+                                        <p class="card-text small text-truncate">{{ product.description }}</p>
+                                        <p class="card-text fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">No SATA SSD available</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- HDDs -->
+                    <div class="tab-pane fade" id="hdd" role="tabpanel">
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for product in components[category] if product.specs and product.specs.get('type') ==
+                            'hdd' %}
+                            <div class="col">
+                                <div class="card h-100 component-item" data-product-id="{{ product.id }}"
+                                    data-category="{{ category }}" data-price="{{ product.price }}">
+                                    <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}"
+                                        style="height: 150px; object-fit: contain; background-color: #f8f9fa;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ product.name }}</h6>
+                                        <p class="card-text small text-truncate">{{ product.description }}</p>
+                                        <p class="card-text fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">No HDD available</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% elif category == 'cooling' %}
+                    <!-- Air Coolers -->
+                    <div class="tab-pane fade show active" id="air-cooler" role="tabpanel">
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for product in components[category] if product.specs and product.specs.get('type') ==
+                            'air' %}
+                            <div class="col">
+                                <div class="card h-100 component-item" data-product-id="{{ product.id }}"
+                                    data-category="{{ category }}" data-price="{{ product.price }}">
+                                    <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}"
+                                        style="height: 150px; object-fit: contain; background-color: #f8f9fa;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ product.name }}</h6>
+                                        <p class="card-text small text-truncate">{{ product.description }}</p>
+                                        <p class="card-text fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">No Air Cooler available</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- AIO Coolers -->
+                    <div class="tab-pane fade" id="aio-cooler" role="tabpanel">
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for product in components[category] if product.specs and product.specs.get('type') ==
+                            'aio' %}
+                            <div class="col">
+                                <div class="card h-100 component-item" data-product-id="{{ product.id }}"
+                                    data-category="{{ category }}" data-price="{{ product.price }}">
+                                    <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}"
+                                        style="height: 150px; object-fit: contain; background-color: #f8f9fa;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ product.name }}</h6>
+                                        <p class="card-text small text-truncate">{{ product.description }}</p>
+                                        <p class="card-text fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">No AIO Cooler available</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for product in components[category] %}
+                        <div class="col">
+                            <div class="card h-100 component-item" data-product-id="{{ product.id }}"
+                                data-category="{{ category }}" data-price="{{ product.price }}">
+                                <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}"
+                                    style="height: 150px; object-fit: contain; background-color: #f8f9fa;">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ product.name }}</h6>
+                                    <p class="card-text small text-truncate">{{ product.description }}</p>
+                                    <p class="card-text fw-bold text-primary">₹{{ "%.2f"|format(product.price) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                {% if category == 'cpu' %}
+                                No CPU available.
+                                {% elif category == 'motherboard' %}
+                                No motherboard available.
+                                {% elif category == 'ram' %}
+                                No RAM available.
+                                {% elif category == 'gpu' %}
+                                No GPU available.
+                                {% elif category == 'psu' %}
+                                No power supply available.
+                                {% elif category == 'case' %}
+                                No case available.
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add to Cart Form (Hidden) -->
+<form id="pc-builder-cart-form" action="{{ url_for('add_pc_to_cart') }}" method="post" style="display: none;">
+    {% for category in categories %}
+    <input type="hidden" name="{{ category }}_id" id="{{ category }}-input">
+    {% endfor %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Variables to store selected components
+        const selectedComponents = {};
+        let totalPrice = 0;
+
+        // Get all component items
+        const componentItems = document.querySelectorAll('.component-item');
+
+        // Function to update total price
+        function updateTotalPrice() {
+            totalPrice = 0;
+            Object.values(selectedComponents).forEach(component => {
+                totalPrice += parseFloat(component.price);
+            });
+
+            document.getElementById('total-price').textContent = '₹' + totalPrice.toFixed(2);
+
+            // Update progress - changed this line to use a fixed number or get from DOM
+            const totalCategories = document.querySelectorAll('.component-category').length;
+            const selectedCount = Object.keys(selectedComponents).length;
+            const progressPercentage = (selectedCount / totalCategories) * 100;
+
+            document.getElementById('build-progress').style.width = progressPercentage + '%';
+            document.getElementById('selected-count').textContent = selectedCount;
+
+            // Update estimated wattage
+            updateEstimatedWattage();
+        }
+
+        // Function to update estimated wattage
+        function updateEstimatedWattage() {
+            let estimatedWattage = 0;
+
+            // Add CPU wattage
+            if (selectedComponents.cpu) {
+                const cpuTDP = 65; // Default TDP
+                estimatedWattage += cpuTDP;
+            }
+
+            // Add GPU wattage
+            if (selectedComponents.gpu) {
+                const gpuTDP = 150; // Default TDP
+                estimatedWattage += gpuTDP;
+            }
+
+            // Add other components wattage
+            if (selectedComponents.motherboard) estimatedWattage += 30;
+            if (selectedComponents.ram) estimatedWattage += 10;
+            if (selectedComponents.storage) estimatedWattage += 10;
+            if (selectedComponents.cooling && selectedComponents.cooling.specs && selectedComponents.cooling.specs.type === 'aio') {
+                estimatedWattage += 15;
+            } else if (selectedComponents.cooling) {
+                estimatedWattage += 5;
+            }
+
+            // Add base system wattage (fans, etc.)
+            estimatedWattage += 30;
+
+            // Update the display
+            document.getElementById('estimated-wattage').textContent = estimatedWattage;
+
+            // Recommended PSU wattage (estimated + 30% headroom)
+            const recommendedWattage = Math.ceil((estimatedWattage * 1.3) / 50) * 50; // Round up to nearest 50W
+            document.getElementById('recommended-psu').textContent = recommendedWattage;
+
+            // Update the progress bar
+            const wattagePercentage = (estimatedWattage / recommendedWattage) * 100;
+            const wattageBar = document.getElementById('wattage-bar');
+            wattageBar.style.width = wattagePercentage + '%';
+
+            // Change color based on usage
+            if (wattagePercentage < 50) {
+                wattageBar.className = 'progress-bar bg-success';
+            } else if (wattagePercentage < 80) {
+                wattageBar.className = 'progress-bar bg-warning';
+            } else {
+                wattageBar.className = 'progress-bar bg-danger';
+            }
+
+            // Check if PSU is sufficient
+            if (selectedComponents.psu) {
+                const psuWattage = selectedComponents.psu.specs && selectedComponents.psu.specs.wattage ?
+                    parseInt(selectedComponents.psu.specs.wattage) : 500;
+
+                if (psuWattage < estimatedWattage) {
+                    // Show warning
+                    showCompatibilityIssue('psu-wattage', 'warning',
+                        'The selected power supply is not sufficient for your PC build. Please choose at least a ' + recommendedWattage + 'W power supply.');
+                } else {
+                    // Remove warning if exists
+                    removeCompatibilityIssue('psu-wattage');
+                }
+            }
+        }
+
+        // Function to show compatibility issue
+        function showCompatibilityIssue(id, type, message) {
+            const compatibilityCard = document.getElementById('compatibility-card');
+            const compatibilityIssues = document.getElementById('compatibility-issues');
+
+            // Show the card if it's hidden
+            compatibilityCard.style.display = 'block';
+
+            // Check if this issue already exists
+            const existingIssue = document.getElementById('issue-' + id);
+            if (existingIssue) {
+                existingIssue.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> ${message}`;
+                return;
+            }
+
+            // Create new issue element
+            const issueElement = document.createElement('div');
+            issueElement.id = 'issue-' + id;
+            issueElement.className = type === 'warning' ? 'compatibility-warning p-2 mb-2' : 'compatibility-error p-2 mb-2';
+            issueElement.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> ${message}`;
+
+            // Add to the issues container
+            compatibilityIssues.appendChild(issueElement);
+        }
+
+        // Function to remove compatibility issue
+        function removeCompatibilityIssue(id) {
+            const issue = document.getElementById('issue-' + id);
+            if (issue) {
+                issue.remove();
+
+                // Hide the card if no issues left
+                const compatibilityIssues = document.getElementById('compatibility-issues');
+                if (compatibilityIssues.children.length === 0) {
+                    document.getElementById('compatibility-card').style.display = 'none';
+                }
+            }
+        }
+
+        // Function to check CPU and motherboard compatibility
+        function checkCpuMotherboardCompatibility() {
+            if (selectedComponents.cpu && selectedComponents.motherboard) {
+                const cpuSocket = selectedComponents.cpu.specs && selectedComponents.cpu.specs.socket ?
+                    selectedComponents.cpu.specs.socket : 'unknown';
+                const motherboardSocket = selectedComponents.motherboard.specs && selectedComponents.motherboard.specs.socket ?
+                    selectedComponents.motherboard.specs.socket : 'unknown';
+
+                if (cpuSocket !== 'unknown' && motherboardSocket !== 'unknown' && cpuSocket !== motherboardSocket) {
+                    showCompatibilityIssue('cpu-motherboard', 'error',
+                        `The CPU and motherboard sockets are incompatible (${cpuSocket} vs ${motherboardSocket}).`);
+                } else {
+                    removeCompatibilityIssue('cpu-motherboard');
+                }
+            }
+        }
+
+        // Add click event to all component items
+        componentItems.forEach(item => {
+            item.addEventListener('click', function () {
+                const productId = this.dataset.productId;
+                const category = this.dataset.category;
+                const price = parseFloat(this.dataset.price);
+                const productName = this.querySelector('.card-title').textContent;
+
+                // Remove selection from other items in the same category
+                document.querySelectorAll(`.component-item[data-category="${category}"]`).forEach(el => {
+                    el.classList.remove('selected');
+                });
+
+                // Add selection to this item
+                this.classList.add('selected');
+
+                // Store selected component
+                selectedComponents[category] = {
+                    id: productId,
+                    name: productName,
+                    price: price,
+                    specs: {} // In a real app, you'd fetch specs from the server or data attributes
+                };
+
+                // Update the hidden input
+                document.getElementById(`${category}-input`).value = productId;
+
+                // Update status icon
+                document.getElementById(`${category}-status`).innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+
+                // Update component name in the header
+                const categoryHeader = document.querySelector(`#${category} .selected-component-name`);
+                if (categoryHeader) {
+                    categoryHeader.textContent = productName;
+                }
+
+                // Update total price
+                updateTotalPrice();
+
+                // Check compatibility
+                checkCpuMotherboardCompatibility();
+            });
+        });
+
+        // Add click event to category links for smooth scrolling
+        document.querySelectorAll('.category-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+
+                window.scrollTo({
+                    top: targetElement.offsetTop - 20,
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Reset build
+        document.getElementById('reset-build').addEventListener('click', function () {
+            // Clear selected components
+            Object.keys(selectedComponents).forEach(key => {
+                delete selectedComponents[key];
+            });
+
+            // Remove selected class from all items
+            document.querySelectorAll('.component-item.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            // Reset status icons
+            document.querySelectorAll('.component-status').forEach(el => {
+                el.innerHTML = '<i class="fas fa-plus-circle text-muted"></i>';
+            });
+
+            // Clear component names in headers
+            document.querySelectorAll('.selected-component-name').forEach(el => {
+                el.textContent = '';
+            });
+
+            // Clear hidden inputs
+            document.querySelectorAll('#pc-builder-cart-form input[type="hidden"]').forEach(el => {
+                el.value = '';
+            });
+
+            // Reset total price
+            totalPrice = 0;
+            document.getElementById('total-price').textContent = '₹0.00';
+
+            // Reset progress
+            document.getElementById('build-progress').style.width = '0%';
+            document.getElementById('selected-count').textContent = '0';
+
+            // Clear compatibility issues
+            document.getElementById('compatibility-issues').innerHTML = '';
+            document.getElementById('compatibility-card').style.display = 'none';
+
+            // Reset estimated wattage
+            document.getElementById('estimated-wattage').textContent = '0';
+            document.getElementById('wattage-bar').style.width = '0%';
+            document.getElementById('wattage-bar').className = 'progress-bar bg-success';
+        });
+
+        // Add all to cart
+        document.getElementById('add-all-to-cart').addEventListener('click', function () {
+            // Check if at least one component is selected
+            if (Object.keys(selectedComponents).length === 0) {
+                alert('Please select at least one component.');
+                return;
+            }
+
+            // Submit the form
+            document.getElementById('pc-builder-cart-form').submit();
+        });
+    });
+</script>
+{% endblock %}
