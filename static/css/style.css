@@ -1,0 +1,213 @@
+/* Custom Styles for PC Assembler - Light Theme */
+
+/* Base Styles */
+body {
+    background-color: #ffffff;
+    color: #212529;
+}
+
+/* Hero Section */
+.hero {
+    background-color: #f0f2f5;
+    background-image: linear-gradient(135deg, #f0f2f5 0%, #e9ecef 100%);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    color: #a12323;
+    border: 1px solid #dee2e6;
+}
+
+/* Card styles */
+.card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Product card image container */
+.card-img-top {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    transition: transform 0.3s;
+    height: 200px;
+    object-fit: contain;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Category icons */
+.fa-microchip, .fa-desktop, .fa-memory, .fa-hdd, .fa-medal, .fa-headset, .fa-shield-alt {
+    color: #0d6efd;
+}
+
+/* PC Builder page */
+.component-list {
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.component-card {
+    cursor: pointer;
+    background-color: #f8f9fa;
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+}
+
+.component-card.selected {
+    border: 2px solid #0d6efd;
+    background-color: #e7f1ff;
+}
+
+.build-summary {
+    position: sticky;
+    top: 2rem;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Product detail page */
+.product-image {
+    max-height: 400px;
+    object-fit: contain;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Cart and Checkout */
+.quantity-input {
+    width: 70px;
+}
+
+.cart-item-image {
+    height: 80px;
+    width: 80px;
+    object-fit: contain;
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .category-section .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Improved form styles */
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Custom button outline */
+.btn-outline-custom {
+    color: #0d6efd;
+    border-color: #0d6efd;
+    background-color: transparent;
+}
+
+.btn-outline-custom:hover {
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Footer improvements */
+footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    color: #212529;
+}
+
+footer a {
+    transition: color 0.3s;
+    color: #495057;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #0d6efd !important;
+}
+
+/* Social icons */
+.social-links a {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.05);
+    margin-right: 0.5rem;
+    transition: background-color 0.3s;
+    color: #495057;
+}
+
+.social-links a:hover {
+    background-color: #0d6efd;
+    color: white !important;
+}
+
+/* Additional light theme adjustments */
+.alert {
+    border: 1px solid transparent;
+}
+
+.spec-item:last-child {
+    border-bottom: none;
+}
+
+/* Scrollbar styling (for browsers that support it) */
+.component-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.component-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.component-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.component-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Table styling */
+.table {
+    background-color: #fff;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
