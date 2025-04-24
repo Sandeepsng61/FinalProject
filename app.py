@@ -14,17 +14,24 @@ db = SQLAlchemy(model_class=Base)
 # create the app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "default_secret_key_for_development")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# configure the database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:12345678@localhost:5432/pcpartpioneersdb'
+# get database url from environment variable
+db_url = os.environ.get("DATABASE_URL")
+
+# Render may give "postgres://", SQLAlchemy needs "postgresql://"
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://")
+
+# Add SSL requirement
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url + "?sslmode=require"
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# initialize the app with the extension
+# initialize the app
 db.init_app(app)
 
 # initialize login manager
