@@ -29,3 +29,4 @@ charset-normalizer
 click
 colorama
 blinker
+psycopg
