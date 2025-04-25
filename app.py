@@ -10,29 +10,25 @@ class Base(DeclarativeBase):
     pass
 
 
-db = SQLAlchemy(model_class=Base)
-# create the app
-app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "default_secret_key_for_development")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
-# get database url from environment variable
 db_url = os.environ.get("DATABASE_URL")
 
-# Render may give "postgres://", SQLAlchemy needs "postgresql://"
+# Some platforms give "postgres://", but SQLAlchemy needs "postgresql://"
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://")
 
-# Add SSL requirement
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url + "?sslmode=require"
+# If you're on Railway and facing SSL issues, comment out sslmode
+# app.config['SQLALCHEMY_DATABASE_URI'] = db_url + "?sslmode=require"
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url  # Safe for Railway
+
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# initialize the app
+# Initialize SQLAlchemy
 db.init_app(app)
+
 
 # initialize login manager
 login_manager = LoginManager()
